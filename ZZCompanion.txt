@@ -1,0 +1,10 @@
+## Title: ZZCompanion 7.0.1
+## Version: 7.0.1
+## AddOnVersion: 070001
+## Last Updated: 2021-06-05
+## APIVersion: 100035
+## Description: Show companion rapport changes
+## Author: ziggr
+## OptionalDependsOn: LibDebugLogger
+
+ZZCompanion.lua
