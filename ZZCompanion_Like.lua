@@ -1,5 +1,4 @@
-ZZCompanion = ZZCompanion or {}
-
+ZZCompanion      = ZZCompanion or {}
 ZZCompanion.Like = {}
 local Like = ZZCompanion.Like
 

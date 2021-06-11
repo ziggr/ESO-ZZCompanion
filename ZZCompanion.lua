@@ -10,6 +10,8 @@ local Like = ZZCompanion.Like
 function ZZCompanion.OnRapportUpdate(event, companion_id, prev_rapport, curr_rapport)
     local delta = curr_rapport - prev_rapport
     ZZCompanion.log:Info("Rapport %+d -> %d", delta, curr_rapport)
+
+    ZZCompanion:ScanForRapportCause()
 end
 
 
@@ -57,24 +59,37 @@ end
 
 -- Reverse-scan event history looking for the most recent RAPPORT event,
 -- and surrounding events that clue us in to why the RAPPORT changed.
-function ZZCompanion:ScanForRapportCause()
+function ZZCompanion:ScanForRapportCause(is_retry)
                         -- Scan 1: for RAPPORT event.
     local rapport_event = nil
-    for i = self.q.head - 1, self.q.tail, -1 do
-        rapport_event = self.q[i]
+    for rapport_event in self.history:Iter() do
         if rapport_event.diff_rapport then break end
     end
     if not (        rapport_event
             and     rapport_event.diff_rapport
-            and not rapport_event.accounted_for) then return end
+            and not rapport_event.accounted_for) then
+        self.log:Debug("no rapport event")
+        return
+    end
 
                         -- Scan 2..n: find a match
+    local matching_like = nil
     for _,like in pairs(self.like_list) do
         if like.Scan(self.q) then
-            self.log:Info("Found one: %s", like.name)
+            matching_like = like
             break
         end
     end
+
+    if matching_like then
+        self.log:Info("Found one: %s", matching_like.name)
+    elseif not is_retry then
+        self.log:Info("No match, trying again later")
+        zo_callLater(function () ZZCompanion:ScanForRapportCause(true) end, 500)
+    else
+        self.log:Info("No known like for rapport change.")
+    end
+
 end
 
 --[[
