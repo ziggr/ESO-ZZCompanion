@@ -18,8 +18,10 @@ sub dirls($)
 
 @files = ( 'Makefile' );
 # push @files, dirls('src');
-push @files, 'ZZCompanion.lua';
 push @files, 'ZZCompanion.txt';
+push @files, 'ZZCompanion.lua';
+push @files, 'ZZCompanion_Dequeue.lua';
+push @files, 'ZZCompanion_Like.lua';
 print join("\n", @files) . "\n";
 
 @prev_mtime = ();
