@@ -8,5 +8,5 @@
 ## OptionalDependsOn: LibDebugLogger
 
 ZZCompanion_Dequeue.lua
-#ZZCompanion_Like.lua
+ZZCompanion_Like.lua
 ZZCompanion.lua

@@ -20,10 +20,10 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
     local self      = ZZCompanion
     self.log        = LibDebugLogger.Create(ZZCompanion.name)
     self.history    = ZZCompanion.Dequeue:New()
-    -- self.like_list  = { Like.Delves
-    --                   , Like.Books
-    --                   , Like.Alcohol
-    --                   }
+    self.like_list  = { ZZCompanion.LikeDelves
+                      , ZZCompanion.LikeBooks
+                      , ZZCompanion.LikeAlcohol
+                      }
 end
 
 -- Postamble -----------------------------------------------------------------

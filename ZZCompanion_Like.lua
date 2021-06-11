@@ -13,13 +13,13 @@ local COOLDOWN_UNKNOWN = nil
 
 function Like:New(args)
     local o = {
-        name            = arg.name
+        name            = args.name
 
                                     -- how much? +1, +5, +10 ...
-    ,   amount          = arg.amount or 0
+    ,   amount          = args.amount or 0
 
                                     -- 5 min? 20h, nil = unknown
-    ,   cooldown_secs   = arg.cooldown_sec or 0
+    ,   cooldown_secs   = args.cooldown_sec or 0
 
                                     -- if cooldown unknown, track min/max
     ,   cooldown_window = { min = 1000 * DAY, max = 0 }
