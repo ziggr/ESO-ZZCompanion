@@ -45,7 +45,9 @@ end
 
 ------------------------------------------------------------------------------
 
-ZZCompanion.LikeDelves = Like:New({ name="delves", amount = 10})
+ZZCompanion.LikeDelves = Like:New({ name="delves", amount = 10
+                                  , cooldown_secs = 30*MINUTE
+                                  })
 
 function ZZCompanion.LikeDelves:ScanOne(event)
     if event.event_id == EVENT_PLAYER_ACTIVATED then
@@ -55,8 +57,10 @@ function ZZCompanion.LikeDelves:ScanOne(event)
 end
 
 ZZCompanion.LikeDelves.LIST = {
-   [ 181] = true         -- some place
- }
+   [134] = true -- Shadowfen  / Sanguine's Demesne
+,  [400] = true -- Auridon    / Mehrunes' Spite
+,  [291] = true -- Stonefalls / Sheogorath's Tongue
+}
 
 ------------------------------------------------------------------------------
 
@@ -68,12 +72,47 @@ end
 
 ------------------------------------------------------------------------------
 
-ZZCompanion.LikeAlcohol = Like:New({name = "alcohol", amount = 1})
+ZZCompanion.LikeAntiquity = Like:New({name="antiquity", amount = 5})
+
+function ZZCompanion.LikeAntiquity:ScanOne(event)
+    return (event.event_id == EVENT_ANTIQUITY_DIGGING_ANTIQUITY_UNEARTHED)
+end
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikePsijicPortals = Like:New({name="psijic portals", amount = 5})
+
+function ZZCompanion.LikePsijicPortals:ScanOne(event)
+    if      event.event_id == EVENT_CLIENT_INTERACT_RESULT
+        and event.target_name == "Psijic Portal" then
+        return true
+    end
+end
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikeDaemonPets = Like:New({name="daemon pets", amount = 1})
+
+local DAEDRIC_PETS = {
+    [5176] -- Daemon Chicken
+}
+
+function ZZCompanion.LikeDaemonPets:ScanOne(event)
+    if      event.event_id == EVENT_COLLECTIBLE_UPDATED
+        and DAEDRIC_PETS[event.collectible_id] then
+        return true
+    end
+end
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikeAlcohol = Like:New({ name = "alcohol", amount = 1
+                                   , cooldown_secs = 5*MINUTE
+                                   })
 
 function ZZCompanion.LikeAlcohol:ScanOne(event)
-    if event.event_id == EVENT_CRAFTING_STATION_INTERACT then
-        local craft_type = event.args[2]
-        return craft_type == CRAFTING_TYPE_PROVISIONING
+    if event.event_id == EVENT_CRAFT_COMPLETED then
+        return event.craft_type == CRAFTING_TYPE_PROVISIONING
     end
 end
 
@@ -95,4 +134,85 @@ function ZZCompanion.LikeKillSnakes:ScanOne(event)
 end
 
 -- ### WHAT ABOUT CRITTER KILLS? Reticule track? I hope not.
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikeKillGoblins = Like:New({ name = "kill goblin", amount = 1
+                                      , cooldown_secs = 4*MINUTE
+                                      })
+
+ZZCompanion.LikeKillGoblins.NAMES = { "Stonechewer Witch"
+                                    , "Stonechewer Skirmisher"
+                                    }
+
+function ZZCompanion.LikeKillGoblins:ScanOne(event)
+    if event.event_id == EVENT_UNIT_DEATH_STATE_CHANGED and event.is_dead then
+        local mob_name = event.unit_name
+        for _,n in ipairs(ZZCompanion.LikeKillGoblins.NAMES) do
+            if mob_name == n then return true end
+        end
+    end
+end
+
+-- ### WHAT ABOUT CRITTER KILLS? Reticule track? I hope not.
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikeSingleLocation = {}
+
+local function ZZCompanion.LikeSingleLocation.New(args)
+    local o = Like:New(args)
+    o.location = args.location
+    o.ScanOne = ZZCompanion.LikeSingleLocation.ScanOne
+    return o
+end
+
+function ZZCompanion.LikeSingleLocation:ScanOne(event)
+    if event.event_id == EVENT_PLAYER_ACTIVATED then
+        local zone_id = ZO_ExplorationUtils_GetPlayerCurrentZoneId()
+        return zone_id == self.location
+    end
+end
+
+ZZCompanion.LikeBrassFortress = ZZCompanion.LikeSingleLocation.New(
+        { name          = "brass fortress"
+        , amount        = 10
+        , cooldown_secs = 20*HOUR
+        , location      = 981
+        })
+
+ZZCompanion.LikeLibraryOfVivec = ZZCompanion.LikeSingleLocation.New(
+        { name          = "library of vivec"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 849
+        })
+
+ZZCompanion.LikeOrsimerGlories = ZZCompanion.LikeSingleLocation.New(
+        { name          = "orsimer glories"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 684
+        })
+
+ZZCompanion.NElsweyrMural = ZZCompanion.LikeSingleLocation.New(
+        { name          = "n elsweyr mural"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 1086
+        })
+
+ZZCompanion.SElsweyrMural = ZZCompanion.LikeSingleLocation.New(
+        { name          = "s elsweyr mural"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 1133
+        })
+
+ZZCompanion.Moawita = ZZCompanion.LikeSingleLocation.New(
+        { name          = "moawita"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 1027
+        })
 

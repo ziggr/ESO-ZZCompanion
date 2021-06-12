@@ -12,6 +12,18 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
                       , ZZCompanion.LikeBooks
                       , ZZCompanion.LikeAlcohol
                       , ZZCompanion.LikeKillSnakes
+                      , ZZCompanion.LikeKillGoblins
+                      , ZZCompanion.LikePsijicPortals
+                      , ZZCompanion.LikeAntiquity
+                      , ZZCompanion.LikeDaemonPets
+
+                            -- individual location cooldowns
+                      , ZZCompanion.LikeBrassFortress
+                      , ZZCompanion.LikeLibraryOfVivec
+                      , ZZCompanion.LikeOrsimerGlories
+                      , ZZCompanion.NElsweyrMural
+                      , ZZCompanion.SElsweyrMural
+                      , ZZCompanion.Moawita
                       }
     self.RegisterListeners()
 end
@@ -89,6 +101,21 @@ function ZZCompanion.RecordEvent(event_id, ...)
         ZZCompanion.log:Debug("death tag: %s   is_dead:%s", event.unit_name, tostring(event.is_dead))
     end
 
+    if event.event_id == EVENT_CRAFT_COMPLETED then
+        local function _extract_craft_completed(event, event_id, craft_type)
+            event.craft_type = craft_type
+        end
+        _extract_craft_completed(event, event_id, ...)
+    end
+
+    if event.event_id == EVENT_CLIENT_INTERACT_RESULT then
+        local function _extract_client_interact(event, event_id, result, target_name)
+            event.result = result
+            event.target_name = target_namee
+        end
+        _extract_client_interact(event, event_id, ...)
+    end
+
     self.history:Append(event)
     ZZCompanion.log:Debug("event recorded %s", EVENT_NAMES[event.event_id] or tostring(event.event_id))
 
@@ -124,9 +151,17 @@ function ZZCompanion:ScanForRapportCause(is_retry)
                         -- Scan 2..n: find a match
     local matching_like = nil
     for _,like in pairs(self.like_list) do
-        if like:Scan(self.history) then
-            matching_like = like
-            break
+        if like.amount ~= rapport_event.diff_rapport then
+            self.log:Debug("  like want %+d  got %+d  %s"
+                          , like.amount
+                          , rapport_event.diff_rapport
+                          , like.name
+                          )
+        else
+            if like:Scan(self.history) then
+                matching_like = like
+                break
+            end
         end
     end
 
@@ -219,7 +254,12 @@ EVENT_ACTIVE_COMPANION_STATE_CHANGED (
 --    , *integer* _currentRapport_)
 
 
+pet
+EVENT_COLLECTIBLE_USE_RESULT
+    0
+    true
 
+* EVENT_COLLECTIBLE_UPDATED (*integer* _id_ = 5176)
 
 
 Event listeners just append to an event log dequeue
