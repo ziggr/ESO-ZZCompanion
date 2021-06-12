@@ -94,7 +94,7 @@ end
 ZZCompanion.LikeDaemonPets = Like:New({name="daemon pets", amount = 1})
 
 local DAEDRIC_PETS = {
-    [5176] -- Daemon Chicken
+    [5176] = true -- Daemon Chicken
 }
 
 function ZZCompanion.LikeDaemonPets:ScanOne(event)
@@ -122,7 +122,9 @@ ZZCompanion.LikeKillSnakes = Like:New({ name = "kill snake", amount = 1
                                       , cooldown_secs = 9*MINUTE + 45*SECOND
                                       })
 
-ZZCompanion.LikeKillSnakes.NAMES = { "Sand Serpent" }
+ZZCompanion.LikeKillSnakes.NAMES = { "Snake"    -- critter
+                                   , "Sand Serpent"
+                                   }
 
 function ZZCompanion.LikeKillSnakes:ScanOne(event)
     if event.event_id == EVENT_UNIT_DEATH_STATE_CHANGED and event.is_dead then
@@ -130,10 +132,16 @@ function ZZCompanion.LikeKillSnakes:ScanOne(event)
         for _,n in ipairs(ZZCompanion.LikeKillSnakes.NAMES) do
             if mob_name == n then return true end
         end
+
+                        -- Might be helpful to list recent kills
+                        -- so that snake and goblin kill scanners
+                        -- can grow their lists of names.
+                        --
+                        -- Only do this logging call once, either
+                        -- LikeKillSnakes or in LikeKillGoblins.
+        ZZCompanion.log:Debug("Recent kill: %s", mob_name)
     end
 end
-
--- ### WHAT ABOUT CRITTER KILLS? Reticule track? I hope not.
 
 ------------------------------------------------------------------------------
 
@@ -141,8 +149,10 @@ ZZCompanion.LikeKillGoblins = Like:New({ name = "kill goblin", amount = 1
                                       , cooldown_secs = 4*MINUTE
                                       })
 
-ZZCompanion.LikeKillGoblins.NAMES = { "Stonechewer Witch"
+ZZCompanion.LikeKillGoblins.NAMES = {
+                                      "Stonechewer Ravager"
                                     , "Stonechewer Skirmisher"
+                                    , "Stonechewer Witch"
                                     }
 
 function ZZCompanion.LikeKillGoblins:ScanOne(event)
@@ -160,7 +170,7 @@ end
 
 ZZCompanion.LikeSingleLocation = {}
 
-local function ZZCompanion.LikeSingleLocation.New(args)
+function ZZCompanion.LikeSingleLocation.New(args)
     local o = Like:New(args)
     o.location = args.location
     o.ScanOne = ZZCompanion.LikeSingleLocation.ScanOne
@@ -195,21 +205,21 @@ ZZCompanion.LikeOrsimerGlories = ZZCompanion.LikeSingleLocation.New(
         , location      = 684
         })
 
-ZZCompanion.NElsweyrMural = ZZCompanion.LikeSingleLocation.New(
+ZZCompanion.LikeNElsweyrMural = ZZCompanion.LikeSingleLocation.New(
         { name          = "n elsweyr mural"
         , amount        = 5
         , cooldown_secs = 20*HOUR
         , location      = 1086
         })
 
-ZZCompanion.SElsweyrMural = ZZCompanion.LikeSingleLocation.New(
+ZZCompanion.LikeSElsweyrMural = ZZCompanion.LikeSingleLocation.New(
         { name          = "s elsweyr mural"
         , amount        = 5
         , cooldown_secs = 20*HOUR
         , location      = 1133
         })
 
-ZZCompanion.Moawita = ZZCompanion.LikeSingleLocation.New(
+ZZCompanion.LikeMoawita = ZZCompanion.LikeSingleLocation.New(
         { name          = "moawita"
         , amount        = 5
         , cooldown_secs = 20*HOUR

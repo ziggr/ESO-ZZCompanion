@@ -8,22 +8,26 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
     local self      = ZZCompanion
     self.log        = LibDebugLogger.Create(ZZCompanion.name)
     self.history    = ZZCompanion.Dequeue:New()
-    self.like_list  = { ZZCompanion.LikeDelves
-                      , ZZCompanion.LikeBooks
-                      , ZZCompanion.LikeAlcohol
-                      , ZZCompanion.LikeKillSnakes
-                      , ZZCompanion.LikeKillGoblins
-                      , ZZCompanion.LikePsijicPortals
-                      , ZZCompanion.LikeAntiquity
-                      , ZZCompanion.LikeDaemonPets
+
+                        -- Define this by hand because I want to control
+                        -- the order of things in the UI.
+    self.like_list  = {
+                        ZZCompanion.LikeAlcohol         --  +1   5m
+                      , ZZCompanion.LikeKillGoblins     --  +1   4m
+                      , ZZCompanion.LikeKillSnakes      --  +1   9m45s
+                      , ZZCompanion.LikeBooks           --  +1   ?m
+                      , ZZCompanion.LikePsijicPortals   --  +5   ?
+                      , ZZCompanion.LikeAntiquity       --  +5   <30m
+                      , ZZCompanion.LikeDelves          -- +10   30m
+                      , ZZCompanion.LikeDaemonPets      --  +1   ? 20h
 
                             -- individual location cooldowns
-                      , ZZCompanion.LikeBrassFortress
-                      , ZZCompanion.LikeLibraryOfVivec
-                      , ZZCompanion.LikeOrsimerGlories
-                      , ZZCompanion.NElsweyrMural
-                      , ZZCompanion.SElsweyrMural
-                      , ZZCompanion.Moawita
+                      , ZZCompanion.LikeBrassFortress   -- +10  20h
+                      , ZZCompanion.LikeLibraryOfVivec  --  +5  20h
+                      , ZZCompanion.LikeOrsimerGlories  --  +5  20h
+                      , ZZCompanion.NElsweyrMural       --  +5  20h
+                      , ZZCompanion.SElsweyrMural       --  +5  20h
+                      , ZZCompanion.Moawita             --  +5  20h
                       }
     self.RegisterListeners()
 end
@@ -108,6 +112,10 @@ function ZZCompanion.RecordEvent(event_id, ...)
         _extract_craft_completed(event, event_id, ...)
     end
 
+    if event.event_id == EVENT_PLAYER_ACTIVATED then
+        event.zone_id = ZO_ExplorationUtils_GetPlayerCurrentZoneId()
+    end
+
     if event.event_id == EVENT_CLIENT_INTERACT_RESULT then
         local function _extract_client_interact(event, event_id, result, target_name)
             event.result = result
@@ -115,6 +123,9 @@ function ZZCompanion.RecordEvent(event_id, ...)
         end
         _extract_client_interact(event, event_id, ...)
     end
+
+-- NUR ZUM DEBUGGEN to make it easier to see history
+event.event_name = EVENT_NAMES[event.event_id]
 
     self.history:Append(event)
     ZZCompanion.log:Debug("event recorded %s", EVENT_NAMES[event.event_id] or tostring(event.event_id))
