@@ -76,3 +76,23 @@ function ZZCompanion.LikeAlcohol:ScanOne(event)
         return craft_type == CRAFTING_TYPE_PROVISIONING
     end
 end
+
+------------------------------------------------------------------------------
+
+ZZCompanion.LikeKillSnakes = Like:New({ name = "kill snake", amount = 1
+                                      , cooldown_secs = 9*MINUTE + 45*SECOND
+                                      })
+
+ZZCompanion.LikeKillSnakes.NAMES = { "Sand Serpent" }
+
+function ZZCompanion.LikeKillSnakes:ScanOne(event)
+    if event.event_id == EVENT_UNIT_DEATH_STATE_CHANGED and event.is_dead then
+        local mob_name = event.unit_name
+        for _,n in ipairs(ZZCompanion.LikeKillSnakes.NAMES) do
+            if mob_name == n then return true end
+        end
+    end
+end
+
+-- ### WHAT ABOUT CRITTER KILLS? Reticule track? I hope not.
+

@@ -17,20 +17,21 @@ function Dequeue:New()
 end
 
 function Dequeue:Append(item)
-    self.q[self.head] = event
+    if not item then return end
+    self.q[self.head] = item
     self.head = self.head + 1
     self:PruneIfNeeded()
 end
 
 -- Limit dequeue growth
 function Dequeue:PruneIfNeeded()
-    if self.head - self.tail <= self.max_ct then return end
+    -- if self.head - self.tail <= self.max_ct then return end
 
-    for i = self.tail, self.head - self.max_ct - 1 do
-        self.q[i] = nil
-    end
+    -- for i = self.tail, self.head - self.max_ct - 1 do
+    --     self.q[i] = nil
+    -- end
 
-    self:RenumberIfNeeded()
+    -- self:RenumberIfNeeded()
 end
 
 -- Limit indicies: left running long enough we'll overflow
@@ -51,12 +52,13 @@ function Dequeue:Iter()
 
     return function ()
         i = i - 1
+d("dequeue i:"..tostring(i))
         if tail <= i then return self.q[i] end
     end
 end
 
 -- So that I can pass in a predicate functor that
--- says "anything older than 5 seconds since head event"
+-- says "anything older than 5 seconds since head item"
 -- to discard old stuff instead of iterating over it pointlessly.
 function Dequeue:RemoveIf(predicate)
     for i = self.tail, self.head - 1 do

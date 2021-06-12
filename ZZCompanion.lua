@@ -3,18 +3,6 @@ ZZCompanion = ZZCompanion or {}
 ZZCompanion.name = "ZZCompanion"
 local Like = ZZCompanion.Like
 
--- EVENT_COMPANION_RAPPORT_UPDATE (
---      *integer* _companionId_
---    , *integer* _previousRapport_
---    , *integer* _currentRapport_)
-function ZZCompanion.OnRapportUpdate(event, companion_id, prev_rapport, curr_rapport)
-    local delta = curr_rapport - prev_rapport
-    ZZCompanion.log:Info("Rapport %+d -> %d", delta, curr_rapport)
-
-    ZZCompanion:ScanForRapportCause()
-end
-
-
 function ZZCompanion.OnAddOnLoaded(event, addon_name)
     if addon_name ~= ZZCompanion.name then return end
     local self      = ZZCompanion
@@ -23,36 +11,94 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
     self.like_list  = { ZZCompanion.LikeDelves
                       , ZZCompanion.LikeBooks
                       , ZZCompanion.LikeAlcohol
+                      , ZZCompanion.LikeKillSnakes
                       }
+    self.RegisterListeners()
 end
-
--- Postamble -----------------------------------------------------------------
 
 EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
                               , EVENT_ADD_ON_LOADED
                               , ZZCompanion.OnAddOnLoaded
                               )
 
-EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
-                              , EVENT_COMPANION_RAPPORT_UPDATE
-                              , ZZCompanion.OnRapportUpdate
-                              )
+local EVENT_NAMES = {
+    [EVENT_COMPANION_RAPPORT_UPDATE              ] = "RAPPORT"
+,   [EVENT_SHOW_BOOK                             ] = "SHOW_BOOK"
+,   [EVENT_CRAFTING_STATION_INTERACT             ] = "CRAFTING_STATION"
+,   [EVENT_INVENTORY_SINGLE_SLOT_UPDATE          ] = "INVENTORY"
+,   [EVENT_CRAFT_COMPLETED                       ] = "CRAFT_COMPLETD"
+,   [EVENT_PLAYER_ACTIVATED                      ] = "PLAYER_ACTIVATED"
+,   [EVENT_ANTIQUITY_DIGGING_ANTIQUITY_UNEARTHED ] = "ANTIQUITY"
+,   [EVENT_CLIENT_INTERACT_RESULT                ] = "INTERACT"
+,   [EVENT_UNIT_DEATH_STATE_CHANGED              ] = "DEATH_STATE"
+}
+function ZZCompanion.RegisterListeners()
+    for event_id,name in pairs(EVENT_NAMES) do
+        EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
+                                      , event_id
+                                      , ZZCompanion.RecordEvent
+                                      )
+    end
+end
 
 
-function ZZCompanion.RecordEvent(...)
+function ZZCompanion.RecordEvent(event_id, ...)
     local self = ZZCompanion
-    local event_id = arg[0]
 
     local event     = {}
-    event.event_id  = arg[0]
+    event.event_id  = event_id
     event.timestamp = GetTimeStamp()
     event.args      = arg
-    self.history:Append(event)
 
+                        -- Identify interesting parts of RAPPORT event.
     if event.event_id == EVENT_COMPANION_RAPPORT_UPDATE then
-        event.prev_rapport = arg[3]
-        event.curr_rapport = arg[4]
-        event.diff_rapport = curr_rapport - diff_rapport
+        local function _extract_rapport(event, event_id, companion_id, prev_rapport, curr_rapport)
+            event.prev_rapport = prev_rapport
+            event.curr_rapport = curr_rapport
+            event.diff_rapport = curr_rapport - prev_rapport
+            ZZCompanion.log:Info("Rapport %+d -> %d", event.diff_rapport, event.curr_rapport)
+        end
+        _extract_rapport(event, event_id, ...)
+    end
+                        -- Capture inventory slot occupant NOW before things
+                        -- slide around upon another later event.
+    if event.event_id == EVENT_INVENTORY_SINGLE_SLOT_UPDATE then
+        local function _extract_inventory( event, event_id, bag_id, slot_id, is_new
+                                         , sound_category, update_reason, stack_count_change )
+                        -- Ignore the MANY updates to weapon charge and armor durability.
+            if update_reason ~= INVENTORY_UPDATE_REASON_DEFAULT then return false end
+
+            event.item_link = GetItemLink(bag_id, slot_id)
+            ZZCompanion.log:Debug( "inventory item_link: %s  reason:%d  ct_change:%+d"
+                                 , event.item_link
+                                 , update_reason
+                                 , stack_count_change
+                                 )
+
+
+        end
+        if not _extract_inventory(event, event_id, ...) then return end
+    end
+
+    if event.event_id == EVENT_UNIT_DEATH_STATE_CHANGED then
+        local function _extract_death_state(event, event_id, unit_tag, is_dead)
+            event.unit_name = GetUnitName(unit_tag)     -- "Sand Serpent"
+            event.is_dead   = is_dead                   -- true
+        end
+        _extract_death_state(event, event_id, ...)
+        ZZCompanion.log:Debug("death tag: %s   is_dead:%s", event.unit_name, tostring(event.is_dead))
+    end
+
+    self.history:Append(event)
+    ZZCompanion.log:Debug("event recorded %s", EVENT_NAMES[event.event_id] or tostring(event.event_id))
+
+                        -- And finally, if this was a rapport change, now
+                        -- that the rapport event is sitting in our history,
+                        -- see if we can match it up to a previous event
+                        -- and deduce its cause. If not, ScanForRapportCause()
+                        -- will zo_callLater() itself in a second to see if
+                        -- the matching event comes in AFTER this rapport update.
+    if event.event_id == EVENT_COMPANION_RAPPORT_UPDATE then
         self:ScanForRapportCause()
     end
 end
@@ -62,8 +108,11 @@ end
 function ZZCompanion:ScanForRapportCause(is_retry)
                         -- Scan 1: for RAPPORT event.
     local rapport_event = nil
-    for rapport_event in self.history:Iter() do
-        if rapport_event.diff_rapport then break end
+    for r in self.history:Iter() do
+        if r.diff_rapport then
+            rapport_event = r
+            break
+        end
     end
     if not (        rapport_event
             and     rapport_event.diff_rapport
@@ -75,7 +124,7 @@ function ZZCompanion:ScanForRapportCause(is_retry)
                         -- Scan 2..n: find a match
     local matching_like = nil
     for _,like in pairs(self.like_list) do
-        if like.Scan(self.q) then
+        if like:Scan(self.history) then
             matching_like = like
             break
         end
@@ -91,6 +140,7 @@ function ZZCompanion:ScanForRapportCause(is_retry)
     end
 
 end
+
 
 --[[
 
@@ -151,7 +201,10 @@ loot psijic portal
   EVENT_TUTORIAL_TRIGGER_COMPLETED (
     *[TutorialTrigger|#TutorialTrigger]* _tutorialTrigger_  81) TUTORIAL_TRIGGER_GAINED_BIND_ON_EQUIP_ITEM  NAH
 
-
+kill snake/goblin
+* EVENT_UNIT_DEATH_STATE_CHANGED (
+      *string* _unitTag_
+    , *bool* _isDead_)
 
 Hrm:
 
