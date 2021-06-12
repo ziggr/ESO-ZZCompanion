@@ -25,11 +25,13 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
                       , ZZCompanion.LikeBrassFortress   -- +10  20h
                       , ZZCompanion.LikeLibraryOfVivec  --  +5  20h
                       , ZZCompanion.LikeOrsimerGlories  --  +5  20h
-                      , ZZCompanion.NElsweyrMural       --  +5  20h
-                      , ZZCompanion.SElsweyrMural       --  +5  20h
+                      , ZZCompanion.LikeNElsweyrMural   --  +5  20h
+                      , ZZCompanion.LikeSElsweyrMural   --  +5  20h
+                      , ZZCompanion.LikeSingleLocation  --  +5  20h
                       , ZZCompanion.Moawita             --  +5  20h
                       }
     self.RegisterListeners()
+    self.RegisterSlashCommand()
 end
 
 EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
@@ -57,6 +59,25 @@ function ZZCompanion.RegisterListeners()
     end
 end
 
+-- Slash Command -------------------------------------------------------------
+function ZZCompanion.RegisterSlashCommand()
+    local lsc = LibSlashCommander
+    if not lsc then
+        SLASH_COMMANDS["/zzcompanion"] = ZZCompanion.SlashCommand
+        return
+    end
+
+    local cmd = lsc:Register( "/zzcompanion"
+                            , function(arg) ZZCompanion.SlashCommand(arg) end
+                            , "Show/hide companion rapport cooldowns")
+end
+
+function ZZCompanion.SlashCommand(arg)
+
+    ZZCompanionUI_ToggleUI()
+end
+
+-- Record Events -------------------------------------------------------------
 
 function ZZCompanion.RecordEvent(event_id, ...)
     local self = ZZCompanion
@@ -140,6 +161,8 @@ event.event_name = EVENT_NAMES[event.event_id]
         self:ScanForRapportCause()
     end
 end
+
+-- Rapport changes -----------------------------------------------------------
 
 -- Reverse-scan event history looking for the most recent RAPPORT event,
 -- and surrounding events that clue us in to why the RAPPORT changed.

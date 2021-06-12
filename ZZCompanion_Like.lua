@@ -42,6 +42,9 @@ function Like:ScanOne(event)
     return false
 end
 
+function Like:GetUIName()
+    return self.name
+end
 
 ------------------------------------------------------------------------------
 
@@ -224,5 +227,12 @@ ZZCompanion.LikeMoawita = ZZCompanion.LikeSingleLocation.New(
         , amount        = 5
         , cooldown_secs = 20*HOUR
         , location      = 1027
+        })
+
+ZZCompanion.LikeHitList = ZZCompanion.LikeSingleLocation.New(
+        { name          = "hit list"
+        , amount        = 5
+        , cooldown_secs = 20*HOUR
+        , location      = 821
         })
 

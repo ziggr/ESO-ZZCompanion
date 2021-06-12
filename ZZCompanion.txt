@@ -5,8 +5,11 @@
 ## APIVersion: 100035
 ## Description: Show companion rapport changes
 ## Author: ziggr
-## OptionalDependsOn: LibDebugLogger
+## SavedVariables: ZZCompanionVars
+## DependsOn: LibDebugLogger
 
 ZZCompanion_Dequeue.lua
 ZZCompanion_Like.lua
+ZZCompanionUI.lua
 ZZCompanion.lua
+ZZCompanion.xml

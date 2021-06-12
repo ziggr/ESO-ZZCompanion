@@ -1,0 +1,95 @@
+<!-- indent:2
+ Because XML as a layout language requires deep nesting.
+-->
+
+<GuiXml>
+  <Controls>
+    <TopLevelControl
+        hidden="true"
+        name="ZZCompanionUI"
+        movable="true"
+        resizeHandleSize="5"
+        mouseEnabled="true"
+        allowBringToTop="true"
+        clampedToScreen="true"
+        >
+      <Dimensions x="350" y="180" />
+
+      <Controls>
+        <Backdrop name="$(parent)BG"
+            centerColor="000000"
+            edgeColor="202020"
+            >
+          <AnchorFill />
+          <Edge edgeSize="2" />
+        </Backdrop>
+
+        <Label name="$(parent)_title" text="ZZCompanion" font="ZoFontGame" color="CCCCCC" >
+          <Anchor relativeTo="$(parent)"
+              offsetX="5"
+              offsetY="5"
+              relativePoint="TOPLEFT"
+              point="TOPLEFT" />
+          <Dimensions x="200" y="320" />
+        </Label>
+
+        <Control name="$(parent)List"
+          inherits="ZO_ScrollList">
+          <Anchor point="TOPLEFT"
+            relativeTo="$(parent)"
+            relativePoint="TOPLEFT"
+            offsetY="20"
+            />
+          <Anchor point="BOTTOMRIGHT"
+            relativeTo="$(parent)"
+            relativePoint="BOTTOMRIGHT"
+            />
+        </Control>
+
+      </Controls>
+    </TopLevelControl>
+
+
+    <Control name="ZZCompanionUIRow"
+      virtual="true"
+      hidden="true"
+      >
+      <Label name="$(parent)Name"
+        font="ZoFontGameSmall"
+        horizontalAlignment="LEFT"
+        hidden="false"
+        >
+        <Anchor
+            point="TOPLEFT"
+            relativeTo="$(parent)"
+            relativePoint="TOPLEFT"
+            />
+        <Anchor
+            point="BOTTOMRIGHT"
+            relativeTo="$(parent)"
+            relativePoint="BOTTOMRIGHT"
+            offsetX="-80"
+            />
+      </Label>
+
+      <Label name="$(parent)Cooldown"
+        font="ZoFontGameSmall"
+        horizontalAlignment="RIGHT"
+        hidden="false"
+        >
+        <Anchor
+            point="TOPLEFT"
+            relativeTo="$(parent)"
+            relativePoint="TOPRIGHT"
+            offsetX="-80"
+            />
+        <Anchor
+            point="BOTTOMRIGHT"
+            relativeTo="$(parent)"
+            relativePoint="BOTTOMRIGHT"
+            />
+      </Label>
+
+    </Control>
+  </Controls>
+</GuiXml>
