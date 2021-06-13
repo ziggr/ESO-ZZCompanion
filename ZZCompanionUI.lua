@@ -5,6 +5,10 @@ function ZZCompanionUI_ToggleUI()
     local was_hidden = ZZCompanionUI:IsHidden()
     if was_hidden then
         ZZCompanion:InitUI()
+        ZZCompanion:UpdateScrollListData()
+        ZZCompanion:PeriodicUpdateStart()
+    else
+        ZZCompanion:PeriodicUpdateStop()
     end
     ZZCompanionUI:SetHidden(not was_hidden)
 end
@@ -66,15 +70,49 @@ function ZZCompanion:ColorizeForState(label, state)
 end
 
 function ZZCompanion.SetupRowData(row_control, row_data, scroll_list)
-    ZZCompanion.log:Debug("SetupRowData %s", row_data.name)
+    ZZCompanion.log:Verbose("SetupRowData %s", row_data.name)
 
     local label = row_control:GetNamedChild("Name")
     label:SetText(row_data.name)
     ZZCompanion:ColorizeForState(label, row_data.state)
 
     label = row_control:GetNamedChild("Cooldown")
-    local text = FormatTimeSeconds(row_data.cooldown_secs
-                                  , TIME_FORMAT_STYLE_SHOW_LARGEST_UNIT)
+    local text = FormatTimeSeconds( row_data.cooldown_secs
+                                  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL
+                                  )
     label:SetText(text)
     ZZCompanion:ColorizeForState(label, row_data.state)
+end
+
+-- Update UI once a second while visible, then stop when hidden.
+function ZZCompanion:PeriodicUpdate()
+    if ZZCompanionUI:IsHidden() then
+        self.log:Debug("PeriodicUpdate hidden")
+        return
+    end
+    self.log:Verbose("PeriodicUpdate running")
+    self:UpdateScrollListData()
+end
+
+                        -- Key passed to EVENT_MANAGER to manage our
+                        -- periodic update task.
+                        --
+                        -- Prefer RegisterForUpdate() over zo_callLater()
+                        -- here to avoid erroneously starting multiple
+                        -- zo_callLater() chains each running once per second,
+                        -- which would update our UI multiple times per second.
+                        -- Don't waste CPU time like that.
+                        --
+ZZCompanion.PERIODIC_UPDATE_NAME = "ZZCompanionPeriodicUpdate"
+
+function ZZCompanion:PeriodicUpdateStart()
+    EVENT_MANAGER:RegisterForUpdate(
+           self.PERIODIC_UPDATE_NAME
+         , 1000
+         , function() ZZCompanion:PeriodicUpdate() end
+         )
+end
+
+function ZZCompanion:PeriodicUpdateStop()
+    EVENT_MANAGER:UnregisterForUpdate(self.PERIODIC_UPDATE_NAME)
 end

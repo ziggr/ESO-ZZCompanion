@@ -33,7 +33,7 @@ function Like:New(args)
     ,   cooldown_secs   = args.cooldown_secs or 0
 
                                     -- if cooldown unknown, track min/max
-    ,   cooldown_window = { min = 2 * DAY, max = 0 }
+    ,   cooldown_window = { min = 5*MINUTE, max = 2*DAY }
 
     ,   prev_timestamp  = 0         -- seconds since the epoch when last observed
     }
@@ -91,6 +91,46 @@ function Like:CalcCurrentCooldown()
         else
             return self.cooldown_window.max - elapsed_secs, Like.STATE.RANGING
         end
+    end
+end
+
+function Like:RecordMatch(rapport_event)
+    ZZCompanion.log:Debug("Like:RecordMatch")
+                        -- First time we've seen this?
+                        -- Record start of our first cooldown.
+    if self.prev_timestamp == 0
+        or rapport_event.timestamp <= self.prev_timestamp then
+        self.prev_timestamp = rapport_event.timestamp
+    else
+                        -- Second-or-later time? Close our current cooldown.
+                        -- Shrink max window to help figure out the still-unknowns.
+        local duration_secs = rapport_event.timestamp - self.prev_timestamp
+        self.cooldown_window.max = math.min(duration_secs, self.cooldown_window.max)
+    end
+
+                        -- Remember.
+    self.prev_timestamp = rapport_event.timestamp
+    ZZCompanion:SaveLike(self)
+end
+
+function Like:Save(sv)
+    ZZCompanion.log:Debug( "Like:Save %s %s"
+                         , self.name
+                         , tostring(self.prev_timestamp)
+                         )
+    sv.prev_timestamp = self.prev_timestamp
+    if self.cooldown_secs ~= 0 then
+        sv.cooldown_window = nil
+    else
+        sv.cooldown_window = self.cooldown_window
+    end
+end
+
+function Like:Load(sv)
+    self.prev_timestamp = sv.prev_timestamp or 0
+    if self.cooldown_secs ~= 0 then return end
+    if sv.cooldown_window then
+        self.cooldown_window = sv.cooldown_window
     end
 end
 

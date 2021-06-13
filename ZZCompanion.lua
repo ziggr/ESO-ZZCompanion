@@ -1,6 +1,8 @@
 ZZCompanion = ZZCompanion or {}
 
-ZZCompanion.name = "ZZCompanion"
+ZZCompanion.name              = "ZZCompanion"
+ZZCompanion.saved_var_version = 1
+
 local Like = ZZCompanion.Like
 
 function ZZCompanion.OnAddOnLoaded(event, addon_name)
@@ -30,8 +32,36 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
                       , ZZCompanion.LikeMoawita         --  +5  20h
                       , ZZCompanion.LikeHitList         --  +5  20h
                       }
-    self.RegisterListeners()
+
+    self.saved_vars = ZO_SavedVars:NewCharacterIdSettings(
+                          ZZCompanion.name .. "Vars"
+                        , self.saved_var_version
+                        , GetWorldName()
+                        , self.default
+                        )
+
+                        -- Register these two listeners outside of
+                        -- RegisterListeners() so that they stick around
+                        -- even if we don't have a companion right now.
+    EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
+                                  , EVENT_COMPANION_ACTIVATED
+                                  , ZZCompanion.OnCompanionActivated
+                                  )
+    EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
+                                  , EVENT_COMPANION_DEACTIVATED
+                                  , ZZCompanion.OnCompanionDeactivated
+                                  )
+
+                        -- Only register companion listeners if
+                        -- we actually have a companion right now. Otherwise,
+                        -- wait until the player summons the companion.
+    if HasActiveCompanion() then
+        self.RegisterListeners()
+        self:LoadLikes()
+    end
+
     self.RegisterSlashCommand()
+
 end
 
 EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
@@ -51,12 +81,40 @@ local EVENT_NAMES = {
 ,   [EVENT_UNIT_DEATH_STATE_CHANGED              ] = "DEATH_STATE"
 }
 function ZZCompanion.RegisterListeners()
+    local self = ZZCompanion
+    self.log:Debug("RegisterListeners")
     for event_id,name in pairs(EVENT_NAMES) do
-        EVENT_MANAGER:RegisterForEvent( ZZCompanion.name
+        EVENT_MANAGER:RegisterForEvent( self.name
                                       , event_id
                                       , ZZCompanion.RecordEvent
                                       )
     end
+end
+
+-- Don't waste CPU time tracking events if we're not listening for cooldowns.
+function ZZCompanion.UnregisterListeners()
+    local self = ZZCompanion
+    self.log:Debug("UnregisterListeners")
+    for event_id,name in pairs(EVENT_NAMES) do
+        EVENT_MANAGER:UnregisterForEvent( self.name
+                                        , event_id
+                                        )
+    end
+end
+
+-- Companion activated/deactivated -------------------------------------------
+
+function ZZCompanion.OnCompanionActivated()
+    local self = ZZCompanion
+    self.log:Debug("OnCompanionActivated")
+    self.RegisterListeners()
+    self:LoadLikes()
+end
+
+function ZZCompanion.OnCompanionDeactivated()
+    local self = ZZCompanion
+    self.log:Debug("OnCompanionDeactivated")
+    self.UnregisterListeners()
 end
 
 -- Slash Command -------------------------------------------------------------
@@ -201,6 +259,7 @@ function ZZCompanion:ScanForRapportCause(is_retry)
 
     if matching_like then
         self.log:Info("Found one: %s", matching_like.name)
+        matching_like:RecordMatch(rapport_event)
     elseif not is_retry then
         self.log:Info("No match, trying again later")
         zo_callLater(function () ZZCompanion:ScanForRapportCause(true) end, 500)
@@ -210,6 +269,42 @@ function ZZCompanion:ScanForRapportCause(is_retry)
 
 end
 
+-- I/O -----------------------------------------------------------------------
+
+function ZZCompanion:LoadLikes()
+    self.log:Debug("LoadLikes %s", tostring(GetUnitName("companion")))
+    for i,like in ipairs(self.like_list) do
+        self:LoadLike(like)
+    end
+end
+
+function ZZCompanion:SaveLike(like)
+    self.log:Debug("SaveLike %s", tostring(like.name))
+    local curr_companion = GetUnitName("companion")
+    if not curr_companion then
+        self.log.Debug("Rapport event came in but no current companion. Ignoring event.")
+        return
+    end
+
+    local sv = self.saved_vars
+    sv[curr_companion] = sv[curr_companion] or {}
+    sv[curr_companion][like.name] = sv[curr_companion][like.name] or {}
+    like:Save(sv[curr_companion][like.name])
+end
+
+function ZZCompanion:LoadLike(like)
+    self.log:Debug("LoadLike %s", tostring(like.name))
+    local curr_companion = GetUnitName("companion")
+    if not curr_companion then
+        self.log.Debug("No current companion. No data to load. Will load later.")
+        return
+    end
+
+    local sv = self.saved_vars
+    sv[curr_companion] = sv[curr_companion] or {}
+    sv[curr_companion][like.name] = sv[curr_companion][like.name] or {}
+    like:Load(sv[curr_companion][like.name])
+end
 
 --[[
 
