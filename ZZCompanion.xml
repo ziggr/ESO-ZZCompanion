@@ -8,12 +8,11 @@
         hidden="true"
         name="ZZCompanionUI"
         movable="true"
-        resizeHandleSize="5"
         mouseEnabled="true"
         allowBringToTop="true"
         clampedToScreen="true"
         >
-      <Dimensions x="350" y="180" />
+      <Dimensions x="250" y="400" />  <!--180  300   400-->
 
       <Controls>
         <Backdrop name="$(parent)BG"
@@ -39,48 +38,52 @@
       </Controls>
     </TopLevelControl>
 
-<!--
-    <Control name="ZZCompanionUIRow"
+    <TopLevelControl name="ZZCompanionUIRow"
       virtual="true"
       hidden="true"
+      mouseEnabled="true"
       >
-      <Label name="$(parent)Name"
-        font="ZoFontGameSmall"
-        horizontalAlignment="LEFT"
-        hidden="false"
-        >
-        <Anchor
-            point="TOPLEFT"
-            relativeTo="$(parent)"
-            relativePoint="TOPLEFT"
-            />
-        <Anchor
-            point="BOTTOMRIGHT"
-            relativeTo="$(parent)"
-            relativePoint="BOTTOMRIGHT"
-            offsetX="-80"
-            />
-      </Label>
-
+      <Controls>
       <Label name="$(parent)Cooldown"
-        font="ZoFontGameSmall"
-        horizontalAlignment="RIGHT"
-        hidden="false"
-        >
-        <Anchor
-            point="TOPLEFT"
-            relativeTo="$(parent)"
-            relativePoint="TOPRIGHT"
-            offsetX="-80"
-            />
-        <Anchor
-            point="BOTTOMRIGHT"
-            relativeTo="$(parent)"
-            relativePoint="BOTTOMRIGHT"
-            />
-      </Label>
+          font="ZoFontGame"
+          horizontalAlignment="RIGHT"
+          hidden="false"
+          text="9m45s"
+          >
+          <Anchor
+              point="TOPLEFT"
+              relativeTo="$(parent)"
+              relativePoint="TOPLEFT"
+              />
+          <Anchor
+              point="BOTTOMRIGHT"
+              relativeTo="$(parent)"
+              relativePoint="BOTTOMLEFT"
+              offsetX="50"
+              />
+        </Label>
 
-    </Control> -->
+
+      <Label name="$(parent)Name"
+          font="ZoFontGame"
+          horizontalAlignment="LEFT"
+          hidden="false"
+          >
+          <Anchor
+              point="TOPLEFT"
+              relativeTo="$(parent)Cooldown"
+              relativePoint="TOPRIGHT"
+              offsetX="5"
+              />
+          <Anchor
+              point="BOTTOMRIGHT"
+              relativeTo="$(parent)"
+              relativePoint="BOTTOMRIGHT"
+              />
+        </Label>
+
+      </Controls>
+    </TopLevelControl>
 
 
   </Controls>

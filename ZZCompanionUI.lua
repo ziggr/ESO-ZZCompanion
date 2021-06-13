@@ -14,15 +14,20 @@ function ZZCompanion:InitUI()
                         -- Create a controller for our list
     local LS = LibScroll
     local scroll_data = {
-        name = "ZZCompanionScrollList"
-    ,   parent = ZZCompanionUI
-    ,   setupCallback = ZZCompanion.SetupRowData
+        name 			= "ZZCompanionScrollList"
+    ,   parent 			= ZZCompanionUI
+    ,   setupCallback 	= ZZCompanion.SetupRowData
+    ,	rowTemplate     = "ZZCompanionUIRow"
+    ,   rowHeight 		= 23
+    ,	width 			= 200
+    , 	height 			= 400
     }
 
     self.scroll_list = LibScroll:CreateScrollList(scroll_data)
     local sl = self.scroll_list
-    sl:SetAnchor(TOPLEFT,     ZZCompanionUI, TOPLEFT,     0, 20)
-    sl:SetAnchor(BOTTOMRIGHT, ZZCompanionUI, BOTTOMRIGHT, 0,  0)
+
+    sl:SetAnchor(TOPLEFT,     ZZCompanionUI, TOPLEFT,      5, 35)
+    sl:SetAnchor(BOTTOMRIGHT, ZZCompanionUI, BOTTOMRIGHT, -5, -5)
 
                         -- Fill the table with data
     self:UpdateScrollListData()
@@ -40,7 +45,9 @@ end
 
 function ZZCompanion.SetupRowData(row_control, row_data, scroll_list)
     ZZCompanion.log:Debug("SetupRowData %s", row_data.name)
-    row_control:SetText(row_data.name)
+
+    local label = row_control:GetNamedChild("Name")
+    label:SetText(row_data.name)
 
     ZZCompanion.ZZ = row_control
 end
