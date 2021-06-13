@@ -9,7 +9,18 @@ local MINUTE = 60 * SECOND
 local HOUR   = 60 * MINUTE
 local DAY    = 24 * HOUR
 
-local COOLDOWN_UNKNOWN = nil
+Like.STATE = {
+                        -- > cooldown_secs. Not in cooldown, can acquire.
+    ["IDLE"       ]  = "idle"
+
+                        -- < cooldown_secs. Recently acquired, waiting.
+ ,  ["IN_COOLDOWN"]  = "in_cooldown"
+
+                        -- cooldown_window.min < X < cooldown_window.max.
+                        -- Might be in cooldown, might not, that's what
+                        -- we're trying to figure out.
+,   ["RANGING"    ]  = "ranging"
+}
 
 function Like:New(args)
     local o = {
@@ -19,12 +30,12 @@ function Like:New(args)
     ,   amount          = args.amount or 0
 
                                     -- 5 min? 20h, nil = unknown
-    ,   cooldown_secs   = args.cooldown_sec or 0
+    ,   cooldown_secs   = args.cooldown_secs or 0
 
                                     -- if cooldown unknown, track min/max
-    ,   cooldown_window = { min = 1000 * DAY, max = 0 }
+    ,   cooldown_window = { min = 2 * DAY, max = 0 }
 
-    ,   prev_timestamp  = 0         -- when last observed
+    ,   prev_timestamp  = 0         -- seconds since the epoch when last observed
     }
 
     setmetatable(o,self)
@@ -44,6 +55,43 @@ end
 
 function Like:GetUIName()
     return self.name
+end
+
+-- Return current cooldown value (counting down seconds) if cooling down/ranging,
+-- or the static known or minimum cooldown if idle.
+--
+-- Also return cooldown state, since the work to figure that out is also the work
+-- to calculate the seconds.
+--
+function Like:CalcCurrentCooldown()
+
+                        -- Like has never triggered? Idle.
+    if self.prev_timestamp == 0 then
+        if self.cooldown_secs ~= 0 then
+            return self.cooldown_secs,       Like.STATE.IDLE
+        else
+            return self.cooldown_window.min, Like.STATE.IDLE
+        end
+    end
+
+    local current_timestamp = GetTimeStamp()
+    local elapsed_secs = current_timestamp - self.prev_timestamp
+
+    if self.cooldown_secs ~= 0 then
+        if elapsed_secs < self.cooldown_secs then
+            return self.cooldown_secs - elapsed_secs, Like.STATE.IN_COOLDOWN
+        else
+            return self.cooldown_secs,                Like.STATE.IDLE
+        end
+    else
+        if elapsed_secs < self.cooldown_window.min then
+            return self.cooldown_window.min - elapsed_secs, Like.STATE.IN_COOLDOWN
+        elseif (self.cooldown_window.max == 0) then
+            return elapsed_secs, Like.STATE.RANGING
+        else
+            return self.cooldown_window.max - elapsed_secs, Like.STATE.RANGING
+        end
+    end
 end
 
 ------------------------------------------------------------------------------
