@@ -63,6 +63,7 @@ ZZCompanion.LikeDelves.LIST = {
    [134] = true -- Shadowfen  / Sanguine's Demesne
 ,  [400] = true -- Auridon    / Mehrunes' Spite
 ,  [291] = true -- Stonefalls / Sheogorath's Tongue
+-- [???] = true -- Vvardenfell / Ashalmawia
 }
 
 ------------------------------------------------------------------------------

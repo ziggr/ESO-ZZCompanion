@@ -27,8 +27,8 @@ function ZZCompanion.OnAddOnLoaded(event, addon_name)
                       , ZZCompanion.LikeOrsimerGlories  --  +5  20h
                       , ZZCompanion.LikeNElsweyrMural   --  +5  20h
                       , ZZCompanion.LikeSElsweyrMural   --  +5  20h
-                      , ZZCompanion.LikeSingleLocation  --  +5  20h
-                      , ZZCompanion.Moawita             --  +5  20h
+                      , ZZCompanion.LikeMoawita         --  +5  20h
+                      , ZZCompanion.LikeHitList         --  +5  20h
                       }
     self.RegisterListeners()
     self.RegisterSlashCommand()

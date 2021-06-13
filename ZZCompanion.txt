@@ -6,7 +6,7 @@
 ## Description: Show companion rapport changes
 ## Author: ziggr
 ## SavedVariables: ZZCompanionVars
-## DependsOn: LibDebugLogger
+## DependsOn: LibDebugLogger LibScroll
 
 ZZCompanion_Dequeue.lua
 ZZCompanion_Like.lua

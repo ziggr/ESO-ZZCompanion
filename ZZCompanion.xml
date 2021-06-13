@@ -24,7 +24,10 @@
           <Edge edgeSize="2" />
         </Backdrop>
 
-        <Label name="$(parent)_title" text="ZZCompanion" font="ZoFontGame" color="CCCCCC" >
+        <Label name="$(parent)Title"
+          text="ZZCompanion"
+          font="ZoFontGame"
+          color="CCCCCC" >
           <Anchor relativeTo="$(parent)"
               offsetX="5"
               offsetY="5"
@@ -33,23 +36,10 @@
           <Dimensions x="200" y="320" />
         </Label>
 
-        <Control name="$(parent)List"
-          inherits="ZO_ScrollList">
-          <Anchor point="TOPLEFT"
-            relativeTo="$(parent)"
-            relativePoint="TOPLEFT"
-            offsetY="20"
-            />
-          <Anchor point="BOTTOMRIGHT"
-            relativeTo="$(parent)"
-            relativePoint="BOTTOMRIGHT"
-            />
-        </Control>
-
       </Controls>
     </TopLevelControl>
 
-
+<!--
     <Control name="ZZCompanionUIRow"
       virtual="true"
       hidden="true"
@@ -90,6 +80,8 @@
             />
       </Label>
 
-    </Control>
+    </Control> -->
+
+
   </Controls>
 </GuiXml>
